@@ -39,8 +39,6 @@ orelse thisparser thatparser = \string -> case (parse thisparser string) of
 itself :: Parser a -> Parser a
 itself thisparser = binds thisparser (\x -> thisparser)
 
-constantlyswears :: Parser a -> Parser String
-constantlyswears thisparser = binds thisparser (\x -> returns "Fuck you!")
 
 satisfaction :: (Char -> Bool) -> Parser Char
 satisfaction predicate = binds items (\x ->
