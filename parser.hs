@@ -121,7 +121,66 @@ tokenparser thisparser =
    binds spaceparser (\y ->
     returns v)))
 
+identifierparser' :: Parser String
+identifierparser' = tokenparser identifierparser
 
+naturalnumberparser' :: Parser Int
+naturalnumberparser' = tokenparser naturalnumberparser
+
+symbolparser :: String -> Parser String
+symbolparser symbol = tokenparser (stringparses symbol)
+
+numbersparser :: Parser [Int]
+numbersparser = 
+ binds (symbolparser "[") (\x ->
+  binds naturalnumberparser' (\n ->
+   binds (iterateparse (shabang)) (\ns ->
+    binds (symbolparser "]") (\z ->
+     returns (n:ns)))))
+   where
+    shabang = 
+     binds (symbolparser ",") (\a ->
+      binds naturalnumberparser' (\b ->
+       returns b))
+ 
+-- We wish to parse the following grammar:
+-- expr := term + expr | term
+-- term := factor*term | factor
+-- factor := (expr) | nat
+-- nat := 0 | 1 | 2 | ...
+
+expr :: Parser Int
+expr = 
+ binds term (\t ->
+  (orelse
+		  (binds (symbolparser "+") (\_ ->
+		    binds expr (\e ->
+		     returns (t+e))))
+		  (returns t) ))
+
+
+term = 
+ binds factor (\f ->
+  (orelse
+		   (binds (symbolparser "*") (\_ ->
+		     binds term (\t ->
+		      returns (f*t))))
+		  (returns f) ))
+
+
+factor = orelse
+		 (binds (symbolparser "(") (\_ ->
+		  binds expr (\e ->
+		   binds (symbolparser ")") (\_ ->
+		    returns e))))
+		 (naturalnumberparser')
+
+
+eval :: String -> Int
+eval xs = case (parse expr xs) of
+ [(n,[])] -> n
+ [(_,output)] -> error("unused input " ++ output)
+ [] -> error "invalid input"
 
 
 
