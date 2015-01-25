@@ -193,6 +193,19 @@ integerparser =
     binds naturalnumberparser' (\number ->
      returns ((-1)*number) ))
 
+isSentence :: Char -> Bool
+isSentence this = (isAlphaNum this) || (isSpace this)
+
+regularsentenceparser :: Parser Char
+regularsentenceparser = satisfaction isSentence
+
+commentparser :: Parser ()
+commentparser =
+ binds (tokenparser (char '-')) (\firstdash ->
+  binds (tokenparser (char '-')) (\seconddash ->
+   binds (iterateparse (regularsentenceparser)) (\line ->
+    binds (tokenparser (char '\n')) (\endofline ->
+     returns ()  ))))
 
 
 
