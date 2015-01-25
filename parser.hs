@@ -63,6 +63,7 @@ isAlphaNum this  = (isAlpha this) || (isDigit this)
 isSpace :: Char -> Bool
 isSpace this = elem this [' ','\n','\t']
 
+
 --end predicates
 
 --define various parsers
@@ -128,8 +129,8 @@ naturalnumberparser' = tokenparser naturalnumberparser
 symbolparser :: String -> Parser String
 symbolparser symbol = tokenparser (stringparses symbol)
 
-numbersparser :: Parser [Int]
-numbersparser = 
+listofnumbersparser :: Parser [Int]
+listofnumbersparser = 
  binds (symbolparser "[") (\x ->
   binds naturalnumberparser' (\n ->
    binds (iterateparse (shabang)) (\ns ->
@@ -179,6 +180,19 @@ eval xs = case (parse expr xs) of
  [(n,[])] -> n
  [(_,output)] -> error("unused input " ++ output)
  [] -> error "invalid input"
+
+
+
+integerparser :: Parser Int
+integerparser = 
+ orelse
+  startswithminusparser
+  naturalnumberparser'
+  where
+   startswithminusparser = binds (tokenparser (char '-')) (\sign ->
+    binds naturalnumberparser' (\number ->
+     returns ((-1)*number) ))
+
 
 
 
