@@ -62,6 +62,9 @@ isAlpha this = (isLower this) || (isUpper this)
 isAlphaNum :: Char -> Bool
 isAlphaNum this  = (isAlpha this) || (isDigit this)
 
+isSpace :: Char -> Bool
+isSpace this = elem this [' ','\n','\t']
+
 --end predicates
 
 --define various parsers
@@ -98,11 +101,25 @@ iterateparse1 thisparser = binds thisparser (\v ->
  binds (iterateparse thisparser) (\vs ->
   returns (v:vs) ))
 
+identifierparser :: Parser String
+identifierparser = binds lower (\x ->
+ binds (iterateparse alphanum) (\xs ->
+  returns (x:xs)))
 
+naturalnumberparser :: Parser Int
+naturalnumberparser = binds (iterateparse1 digit) (\xs ->
+ returns (read xs))
 
+spaceparser :: Parser ()
+spaceparser = binds (iterateparse (satisfaction isSpace)) (\x ->
+ returns ())
 
-
-
+tokenparser :: Parser a -> Parser a
+tokenparser thisparser = 
+ binds spaceparser (\x ->
+  binds thisparser (\v ->
+   binds spaceparser (\y ->
+    returns v)))
 
 
 
